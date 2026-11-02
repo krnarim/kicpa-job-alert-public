@@ -40,6 +40,9 @@ FIXED_MAIL_BODY = os.environ.get("MAIL_BODY", "")
 
 TELEGRAM_API = "https://api.telegram.org/bot{}/sendMessage"
 
+# 빅4(삼일·안진·삼정·한영) 채용 페이지만 알린다. 한공회·세무사회 게시판 알림도 다시 받으려면 False로.
+BIG4_ONLY = True
+
 
 def http_get(url):
     req = urllib.request.Request(url, headers={"User-Agent": UA})
@@ -435,7 +438,7 @@ def main():
     known_emails = set(state.get("known_emails", []))
     edit_scan_state = state.setdefault("last_edit_scan", {})
 
-    for source_key, cfg in SOURCES.items():
+    for source_key, cfg in ({} if BIG4_ONLY else SOURCES).items():
         seen = set(state["seen"].get(source_key, []))
         hashes = state.setdefault("content_hash", {}).setdefault(source_key, {})
         reg_dates = state.setdefault("reg_dates", {}).setdefault(source_key, {})
@@ -588,7 +591,8 @@ def main():
 
         state["seen"][source_key] = sorted(seen)
 
-    sent_count += check_kacpta(state)
+    if not BIG4_ONLY:
+        sent_count += check_kacpta(state)
 
     state["known_emails"] = sorted(known_emails)
 
